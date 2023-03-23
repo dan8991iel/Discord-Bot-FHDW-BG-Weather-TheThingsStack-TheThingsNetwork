@@ -1,10 +1,15 @@
 // 1. Set up your development environment
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { EmbedBuilder , Client, GatewayIntentBits, Partials } = require('discord.js');
 const axios = require('axios');
 const { token, ttnAppID, ttnApiKey } = require('./config.json');
 
 // 2. Create a Discord bot
-const client = new Client({ intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
+const client = new Client({ intents: [ 
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent]
+});
 const prefix = '!';
 
 client.on('ready', () => {
@@ -12,7 +17,7 @@ client.on('ready', () => {
     console.log('Bot is connected to Discord!');
 });
 
-client.on('message', async (msg) => {
+client.on('messageCreate', async (msg) => {
     console.log(`Message received: ${msg.content}`);
 
     if (!msg.content.startsWith(prefix) || msg.author.bot) return;
@@ -39,20 +44,21 @@ client.on('message', async (msg) => {
 
             // 5. Display the weather data on Discord
             const weatherEmbed = createWeatherEmbed(weatherData);
-            msg.channel.send(weatherEmbed);
+            msg.channel.send({ embeds: [weatherEmbed] });
         } catch (error) {
             console.error(error);
             msg.channel.send('Error fetching weather data.');
         }
     } else if (command === 'help') {
-        const helpEmbed = new Discord.MessageEmbed()
+        const helpEmbed = new EmbedBuilder()
             .setColor('#0099ff')
             .setTitle('Help')
             .setDescription('List of available commands:')
-            .addField('!weather', 'Displays current weather data from the LoRaWAN weather station.')
-            .addField('!help', 'Displays this help message.');
-
-        msg.channel.send(helpEmbed);
+            .addFields(
+                {name:'!weather', value:'Displays current weather data from the LoRaWAN weather station.'},
+                {name:'!help', value:'Displays this help message.'}
+            )
+        msg.channel.send({ embeds: [helpEmbed] });
     }
     else {
         msg.channel.send(`Invalid command: ${command}`);
@@ -80,13 +86,13 @@ async function getDeviceData(deviceID) {
 }
 
 function createWeatherEmbed(weatherData) {
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#0099ff')
         .setTitle('Weather Data')
         .setDescription('Current weather data from the LoRaWAN weather station:')
-        .addField('Temperature', `${weatherData.temperature} °C`, true)
-        .addField('Humidity', `${weatherData.humidity} %`, true)
-        .addField('Pressure', `${weatherData.pressure} hPa`, true)
+        .addFields({name:'Temperature', value:`${weatherData.temperature} °C`, inline: true},
+        {name:'Humidity', value:`${weatherData.humidity} %`, inline: true},
+        {name:'Pressure', value:`${weatherData.pressure} hPa`, inline: true})
         .setTimestamp()
         .setFooter('Weather Station LoRaWAN', client.user.avatarURL());
 
@@ -110,6 +116,6 @@ setInterval(async () => {
   } catch (error) {
     console.error(error);
   }
-}, 3600000);
+}, 36000);
 
 client.login(token);
