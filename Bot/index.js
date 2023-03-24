@@ -1,7 +1,8 @@
 // 1. Set up your development environment
+const Discord = require('discord.js');
 const { EmbedBuilder , Client, GatewayIntentBits, Partials } = require('discord.js');
-const axios = require('axios');
-const { token, ttnAppID, ttnApiKey } = require('./config.json');
+const mqtt = require('mqtt');
+const { token, ttnAppUser, ttnAppPw, ttnAdress } = require('./config.json');
 
 // 2. Create a Discord bot
 const client = new Client({ intents: [ 
@@ -65,6 +66,7 @@ client.on('messageCreate', async (msg) => {
     }
 });
 
+/*
 async function getDeviceData(deviceID) {
     const response = await axios.get(
         `https://eu1.cloud.thethings.network/api/v3/as/applications/${ttnAppID}/devices/${deviceID}/packages/storage/uplink_message`,
@@ -83,7 +85,7 @@ async function getDeviceData(deviceID) {
         humidity: decoded_payload.humidity,
         pressure: decoded_payload.pressure,
     };
-}
+}*/
 
 function createWeatherEmbed(weatherData) {
     const embed = new EmbedBuilder()
@@ -117,5 +119,36 @@ setInterval(async () => {
     console.error(error);
   }
 }, 36000);
+
+
+
+
+// MQTT configuration
+const mqttAppUser = ttnAppUser;
+const mqttAppPw = ttnAppPw;
+const mqttAdress = ttnAdress;
+
+const mqttClient = mqtt.connect(mqttAdress, {
+  username: ttnAppUser,
+  password: ttnAppPw,
+});
+
+mqttClient.on('connect', () => {
+  console.log('Connected to The Things Network via MQTT');
+  mqttClient.subscribe(`${ttnAppUser}/devices/+/up`);
+});
+
+mqttClient.on('message', (topic, message) => {
+  const data = JSON.parse(message.toString());
+  console.log('Received data:', data);
+  console.log(data.payload_fields);
+
+});
+
+
+
+
+
+
 
 client.login(token);
