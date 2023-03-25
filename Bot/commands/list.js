@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const wait = require('node:timers/promises').setTimeout;
+const dataStorage = require('../data/dataStorage');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -8,19 +9,31 @@ module.exports = {
 	async execute(interaction) {
         await interaction.deferReply({ephemeral: true });
 
-        const subscribers = Array.from(interaction.client.subbedChannels);
+        const readChannelIdData = Array.from(dataStorage.readData());
+        const subscribedChannels = new Array();
 
-        if(!subscribers.length){
+        
+        readChannelIdData.forEach((channelId)=>{
+            try{
+                interaction.client.channels.cache.get(channelId).id;
+                subscribedChannels.push(interaction.client.channels.cache.get(channelId));
+            }catch(error){
+                dataStorage.removeData(channelId);
+            }
+        });
+
+
+        if(!subscribedChannels.length){
             await interaction.editReply({ content: `There are no channels currently subscribed to the FHDW-Weatherstation.`, ephemeral: true });
             await wait(6000);
         }else{
-            subscribers.sort((a, b) => (a.rawPosition > b.rawPosition) ? 1 : -1)
+            subscribedChannels.sort((a, b) => (a.rawPosition > b.rawPosition) ? 1 : -1)
 
             let message = "The following channels are subscribed to the FHDW-Weatherstation: \n\n";
 
 
-            subscribers.forEach((value) => {
-                message += `Name: ${value.name}, ID: ${value.id}\n`;
+            subscribedChannels.forEach((value) => {
+                message += `Channel: ${value}, ID: ${value.id}\n`;
             });
             await interaction.editReply({ content: message, ephemeral: true });
             await wait(20000);
