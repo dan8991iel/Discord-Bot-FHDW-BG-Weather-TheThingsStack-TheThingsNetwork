@@ -1,8 +1,10 @@
 // 1. Set up your development environment
+const fs = require('node:fs');
+const path = require('node:path');
 const Discord = require('discord.js');
-const { EmbedBuilder , Client, GatewayIntentBits, Partials } = require('discord.js');
+const { EmbedBuilder , Client, Collection, GatewayIntentBits } = require('discord.js');
 const mqtt = require('mqtt');
-const { token, ttnAppUser, ttnAppPw, ttnAdress } = require('./config.json');
+const { token, ttnAppUser, ttnAppPw, ttnAdress , ttnAppDevice} = require('./config.json');
 
 // 2. Create a Discord bot
 const client = new Client({ intents: [ 
@@ -11,120 +13,68 @@ const client = new Client({ intents: [
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent]
 });
-const prefix = '!';
 
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-    console.log('Bot is connected to Discord!');
-});
 
-client.on('messageCreate', async (msg) => {
-    console.log(`Message received: ${msg.content}`);
+client.subbedChannels = new Set();
 
-    if (!msg.content.startsWith(prefix) || msg.author.bot) return;
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-    const args = msg.content.slice(prefix.length).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
+for (const file of commandFiles) {
+	const filePath = path.join(commandsPath, file);
+	const command = require(filePath);
+	// Set a new item in the Collection with the key as the command name and the value as the exported module
+	if ('data' in command && 'execute' in command) {
+		client.commands.set(command.data.name, command);
+	} else {
+		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+	}
+}
 
-    if (command === 'weather') {
-        try {
-            // 3. Connect to The Things Network/Stack API
-            const response = await axios.get(
-                `https://eu1.cloud.thethings.network/api/v3/as/applications/${ttnAppID}/devices?limit=1`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${ttnApiKey}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
 
-            // 4. Fetch the weather data
-            const deviceID = response.data.devices[0].ids.device_id;
-            const weatherData = await getDeviceData(deviceID);
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
-            // 5. Display the weather data on Discord
-            const weatherEmbed = createWeatherEmbed(weatherData);
-            msg.channel.send({ embeds: [weatherEmbed] });
-        } catch (error) {
-            console.error(error);
-            msg.channel.send('Error fetching weather data.');
-        }
-    } else if (command === 'help') {
-        const helpEmbed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('Help')
-            .setDescription('List of available commands:')
-            .addFields(
-                {name:'!weather', value:'Displays current weather data from the LoRaWAN weather station.'},
-                {name:'!help', value:'Displays this help message.'}
-            )
-        msg.channel.send({ embeds: [helpEmbed] });
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
+
+
+async function subChannelToWeatherUplink(msg, subChannel){
+    if(subChannel){
+        client.subbedChannels.add(msg.channelId);
+    }else{
+        client.subbedChannels.delete(msg.channelId);
     }
-    else {
-        msg.channel.send(`Invalid command: ${command}`);
-    }
-});
+}
 
-/*
-async function getDeviceData(deviceID) {
-    const response = await axios.get(
-        `https://eu1.cloud.thethings.network/api/v3/as/applications/${ttnAppID}/devices/${deviceID}/packages/storage/uplink_message`,
-        {
-            headers: {
-                'Authorization': `Bearer ${ttnApiKey}`,
-                'Content-Type': 'application/json',
-            },
-        }
-    );
-
-    const { decoded_payload } = response.data;
-    console.log(decoded_payload);
-    return {
-        temperature: decoded_payload.temperature,
-        humidity: decoded_payload.humidity,
-        pressure: decoded_payload.pressure,
-    };
-}*/
 
 function createWeatherEmbed(weatherData) {
     const embed = new EmbedBuilder()
         .setColor('#0099ff')
         .setTitle('Weather Data')
         .setDescription('Current weather data from the LoRaWAN weather station:')
-        .addFields({name:'Temperature', value:`${weatherData.temperature} °C`, inline: true},
-        {name:'Humidity', value:`${weatherData.humidity} %`, inline: true},
-        {name:'Pressure', value:`${weatherData.pressure} hPa`, inline: true})
-        .setTimestamp()
-        .setFooter('Weather Station LoRaWAN', client.user.avatarURL());
+
+    Object.entries(weatherData).forEach(([key, data]) => {
+        embed.addFields({name: String(key), value: String(data), inline: true});
+    });
+
+    embed.setTimestamp();
 
     return embed;
 }
 
 
-const channelId = '1088578017623801886';
-
-setInterval(async () => {
-  try {
-    const channel = client.channels.cache.get(channelId);
-
-    if (!channel) {
-      console.error('Channel not found.');
-      return;
-    }
-    
-    channel.send('Hello, world!');
-    // ... (the code for getting and displaying weather data)
-  } catch (error) {
-    console.error(error);
-  }
-}, 36000);
-
-
-
-
 // MQTT configuration
 const mqttAppUser = ttnAppUser;
+const mqttAppDevice = ttnAppDevice;
 const mqttAppPw = ttnAppPw;
 const mqttAdress = ttnAdress;
 
@@ -135,20 +85,72 @@ const mqttClient = mqtt.connect(mqttAdress, {
 
 mqttClient.on('connect', () => {
   console.log('Connected to The Things Network via MQTT');
-  mqttClient.subscribe(`${ttnAppUser}/devices/+/up`);
+
+  mqttClient.subscribe(`v3/${ttnAppUser}@ttn/devices/${mqttAppDevice}/up`, {qos:2}, (err, granted) => {
+    if (err) {
+      console.error('Failed to subscribe:', err);
+    } else {
+      console.log(`Successfully subscribed to topic: ${granted[0].topic}`);
+    }
+  });
 });
 
-mqttClient.on('message', (topic, message) => {
-  const data = JSON.parse(message.toString());
-  console.log('Received data:', data);
-  console.log(data.payload_fields);
+mqttClient.on('subscribe', (topic, granted) => {
+    console.log(`Successfully subscribed to topic: ${topic}`);
+  });
 
+mqttClient.on('error', (error) => {
+    console.error('MQTT error:', error);
+  });
+
+mqttClient.on('message', (topic, message, packet) => {
+    encodedData = JSON.parse(message)["uplink_message"]["frm_payload"];
+    decodedData = JSON.parse(atob(encodedData));
+
+    const weatherEmbed = createWeatherEmbed(decodedData);
+            
+    client.subbedChannels.forEach((value) => {
+        
+        value.send({ embeds: [weatherEmbed] });
+    });
 });
-
-
-
-
 
 
 
 client.login(token);
+
+
+/*
+client.on('messageCreate', async (msg) => {
+    console.log(`Message received: ${msg.content}`);
+
+    if (!msg.content.startsWith(prefix) || msg.author.bot) return;
+
+    const args = msg.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+    
+
+    switch(command){
+        case 'weather_sub': subChannelToWeatherUplink(msg, true); break;
+        case 'weather_unsub': subChannelToWeatherUplink(msg, false); break;
+        case 'weather_help': sendHelpMessage(msg); break;
+        default: msg.channel.send(`Invalid command: ${command}`); break;
+    }
+
+
+
+    //const channel = client.channels.cache.get(value.id);
+
+
+    async function sendHelpMessage(msg){
+    const helpEmbed = new EmbedBuilder()
+            .setColor('#0099ff')
+            .setTitle('Help')
+            .setDescription('List of available commands:')
+            .addFields(
+                {name:'!weather', value:'Displays current weather data from the LoRaWAN weather station.'},
+                {name:'!help', value:'Displays this help message.'}
+            )
+        msg.channel.send({ embeds: [helpEmbed] });
+}
+});*/
