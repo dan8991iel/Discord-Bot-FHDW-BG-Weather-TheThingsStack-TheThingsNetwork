@@ -1,12 +1,13 @@
-// 1. Set up your development environment
 const fs = require('node:fs');
 const path = require('node:path');
 const Discord = require('discord.js');
+const dataStorage = require('./data/dataStorage');
 const { EmbedBuilder , Client, Collection, GatewayIntentBits } = require('discord.js');
 const mqtt = require('mqtt');
 const { token, ttnAppUser, ttnAppPw, ttnAdress , ttnAppDevice} = require('./config.json');
+const { data } = require('./commands/unsubscribe');
 
-// 2. Create a Discord bot
+
 const client = new Client({ intents: [ 
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
@@ -15,8 +16,6 @@ const client = new Client({ intents: [
 });
 
 
-client.subbedChannels = new Set();
-
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -24,7 +23,7 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	const command = require(filePath);
-	// Set a new item in the Collection with the key as the command name and the value as the exported module
+
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
 	} else {
@@ -47,13 +46,7 @@ for (const file of eventFiles) {
 }
 
 
-async function subChannelToWeatherUplink(msg, subChannel){
-    if(subChannel){
-        client.subbedChannels.add(msg.channelId);
-    }else{
-        client.subbedChannels.delete(msg.channelId);
-    }
-}
+
 
 
 function createWeatherEmbed(weatherData) {
@@ -108,10 +101,16 @@ mqttClient.on('message', (topic, message, packet) => {
     decodedData = JSON.parse(atob(encodedData));
 
     const weatherEmbed = createWeatherEmbed(decodedData);
-            
-    client.subbedChannels.forEach((value) => {
-        
-        value.send({ embeds: [weatherEmbed] });
+    
+    const channelIds = dataStorage.readData();
+
+    channelIds.forEach((channelId)=>{
+      try{
+        client.channels.cache.get(channelId).send({ embeds: [weatherEmbed] });
+      }
+      catch(error){
+        dataStorage.removeData(channelId);
+      }
     });
 });
 
@@ -121,6 +120,15 @@ client.login(token);
 
 
 /*
+
+async function subChannelToWeatherUplink(msg, subChannel){
+    if(subChannel){
+        client.subbedChannels.add(msg.channelId);
+    }else{
+        client.subbedChannels.delete(msg.channelId);
+    }
+}
+
 client.on('messageCreate', async (msg) => {
     console.log(`Message received: ${msg.content}`);
 
