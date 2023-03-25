@@ -12,7 +12,7 @@ Through this demonstration, the repository seeks to empower developers and enthu
 
 The integration of data from The Things Stack into a Discord bot was achieved using the MQTT protocol, a lightweight and efficient messaging protocol designed for IoT devices. MQTT allows for secure and reliable data transfer between the end device and the Discord bot. By subscribing to the appropriate topics in The Things Stack, the Discord bot can receive the data transmitted by the IoT devices.
 
-The necessary code is implemnted in the `ìndex.js`. The integration was achieved by following these steps:
+The necessary code is implemnted in the `index.js`. The integration was achieved by following these steps:
 
 1. Configure MQTT settings by providing the required credentials, such as the MQTT address, application user, device ID, and password.
 2. Connect to The Things Network using the `mqtt.connect()` function and providing the necessary credentials.
