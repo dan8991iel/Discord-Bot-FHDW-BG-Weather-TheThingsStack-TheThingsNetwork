@@ -39,8 +39,8 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
 ```bash
 ...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> npm install
 ```
-  You might have to navigate to the Bot directory before running `npm install`.
-  Tpo navigate use `cd folder_name`
+    You might have to navigate to the Bot directory before running `npm install`.
+    To navigate use `cd folder_name`
 
 3. Create a config.json file in the Bot directory and add your Discord bot token, client ID, guild ID, and other required details:
 
@@ -50,10 +50,10 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
   "clientId": "your_discord_bot_client_id",
   "guildId": "your_discord_server_guild_id",
   
-  "ttnAppUser": "your_ttn_app_user", (Name of your TTN-App) 
-  "ttnAppPw": "your_ttn_app_pw", (Name of your TTN-App)
-  "ttnAdress": "your_ttn_address", (Example: "mqtts://eu1.cloud.thethings.network:8883")
-  "ttnAppDevice": "your_ttn_app_device" (Example: "eui-00a0000aa000a000")
+  "ttnAppUser": "your_ttn_app_user",
+  "ttnAppPw": "your_ttn_app_pw",
+  "ttnAdress": "your_ttn_address",
+  "ttnAppDevice": "your_ttn_app_device"
 }
 ```
 **Example:**
@@ -64,9 +64,9 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
   "guildId": "1234567891234567891",
   
   "ttnAppUser": "hello-world-weather",
-  "ttnAppPw": "NXYXX.0A0AAAAAAAA0AAAAAAA4AAA00AAAMAAAAAAAAA.AA0AAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", (Name of your TTN-App)
-  "ttnAdress": "mqtts://eu1.cloud.thethings.network:8883", (Example: "mqtts://eu1.cloud.thethings.network:8883")
-  "ttnAppDevice": "eui-00a0000aa000a000" (Example: "eui-00a0000aa000a000")
+  "ttnAppPw": "NXYXX.0A0AAAAAAAA0AAAAAAA4AAA00AAAMAAAAAAAAA.AA0AAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "ttnAdress": "mqtts://eu1.cloud.thethings.network:8883",
+  "ttnAppDevice": "eui-00a0000aa000a000"
 }
 ```
 
@@ -83,7 +83,7 @@ https://discord.com/api/oauth2/authorize?client_id=your_discord_bot_client_id&pe
 ```bash
 ...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> node deploy-commands.js
 ```
-  (You might have to restart your Discord-Client afterwards)
+    (You might have to restart your Discord-Client afterwards)
 
 3. Run the bot:
 
