@@ -7,8 +7,24 @@ This Discord bot provides weather data from the FHDW Weatherstation. The bot can
 - Node.js v14 or higher
 - npm (usually bundled with Node.js)
 - An active Discord account with administrative access to a server
-- A bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
+- A bot and the corresponding bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
 - The Things Network/Stack Application ID and API Key
+
+## Creating and Setting Up a Discord Bot
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and sign in with your Discord account.
+
+2. Click on the "New Application" button, give your application a name, and then click "Create".
+
+3. In the application's settings, click on the "Bot" tab, then click on the "Add Bot" button to create a bot for your application. Confirm by clicking "Yes, do it!".
+
+4. In the "Bot" tab make sure that the "MESSAGE CONTENT INTENT" is set to `true`.
+
+5. Under the "TOKEN" section, click "Copy" to copy your bot token. Keep this token safe, as it will be used to authenticate your bot with Discord.
+
+6. (Optional) Customize your bot's name, profile picture, and other settings as desired.
+Open
+
 
 ## Installation
 
@@ -21,11 +37,12 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
 2. Install the required dependencies:
 
 ```bash
-cd FHDW-Weatherstation-Discord-Bot/Bot
-npm install
+...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> npm install
 ```
+  You might have to navigate to the Bot directory before running `npm install`.
+  Tpo navigate use `cd folder_name`
 
-3. Create a config.json file in the root directory and add your Discord bot token, client ID, guild ID, and other required details:
+3. Create a config.json file in the Bot directory and add your Discord bot token, client ID, guild ID, and other required details:
 
 ```json
 {
@@ -33,14 +50,29 @@ npm install
   "clientId": "your_discord_bot_client_id",
   "guildId": "your_discord_server_guild_id",
   
-  "ttnAppUser": "your_ttn_app_user",
-  "ttnAppPw": "your_ttn_app_pw",
-  "ttnAdress": "your_ttn_address",
-  "ttnAppDevice": "your_ttn_app_device"
+  "ttnAppUser": "your_ttn_app_user", (Name of your TTN-App) 
+  "ttnAppPw": "your_ttn_app_pw", (Name of your TTN-App)
+  "ttnAdress": "your_ttn_address", (Example: "mqtts://eu1.cloud.thethings.network:8883")
+  "ttnAppDevice": "your_ttn_app_device" (Example: "eui-00a0000aa000a000")
+}
+```
+**Example:**
+```json
+{
+  "token": "AAA0000aaa000AAAA000AA.AAA00AAA.aaa-AaaaaAA0000AAAAAAAAAAaaaAAAA00AAAAAA",
+  "clientId": "1234567891234567891",
+  "guildId": "1234567891234567891",
+  
+  "ttnAppUser": "hello-world-weather",
+  "ttnAppPw": "NXYXX.0A0AAAAAAAA0AAAAAAA4AAA00AAAMAAAAAAAAA.AA0AAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", (Name of your TTN-App)
+  "ttnAdress": "mqtts://eu1.cloud.thethings.network:8883", (Example: "mqtts://eu1.cloud.thethings.network:8883")
+  "ttnAppDevice": "eui-00a0000aa000a000" (Example: "eui-00a0000aa000a000")
 }
 ```
 
+
 ## Usage
+
 
 1. Invite the bot to your Discord server using the appropriate URL (replace your_discord_bot_client_id with the actual client ID):
 
@@ -51,17 +83,17 @@ https://discord.com/api/oauth2/authorize?client_id=your_discord_bot_client_id&pe
 ```bash
 ...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> node deploy-commands.js
 ```
-(You might have to restart your Discord-Client afterwards)
+  (You might have to restart your Discord-Client afterwards)
 
 3. Run the bot:
 
-3.1 To start the bot, run:
+3.1. To start the bot, run:
 
 ```bash
 ...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> npm start
 ```
 
-3.2 To run the bot in development mode with nodemon, run:
+3.2. To run the bot in development mode with nodemon, run:
 
 ```bash
 ...\TheThingsNetwork-DiscordBot-FHDW-WeatherData\Bot> npm run dev
