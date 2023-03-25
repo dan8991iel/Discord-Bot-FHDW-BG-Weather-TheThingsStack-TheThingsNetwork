@@ -2,6 +2,12 @@
 
 This Discord bot provides weather data from the FHDW Weatherstation. The bot can subscribe and unsubscribe channels to receive weather updates, list the currently subscribed channels, and unsubscribe all channels at once.
 
+## Aim of the Repository
+
+The aim of this repository is to provide a comprehensive example of how to integrate data from an end device in The Things Stack into a Discord bot using the MQTT protocol. By doing so, it bridges the gap between IoT devices using LoRaWAN technology and the popular communication platform, Discord. This enables users to receive real-time updates from their IoT devices, such as weather data, directly in their Discord channels.
+
+Through this demonstration, the repository seeks to empower developers and enthusiasts to explore the potential of integrating IoT data with Discord. The project serves as a foundation for creating more sophisticated applications that leverage LoRaWAN data in innovative ways. Ultimately, this repository aims to inspire the community to find new and creative ways to utilize IoT data and enhance the capabilities of their Discord bots.
+
 ## Prerequisites
 
 - Node.js v14 or higher
