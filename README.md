@@ -12,14 +12,22 @@ Through this demonstration, the repository seeks to empower developers and enthu
 
 The integration of data from The Things Stack into a Discord bot was achieved using the MQTT protocol, a lightweight and efficient messaging protocol designed for IoT devices. MQTT allows for secure and reliable data transfer between the end device and the Discord bot. By subscribing to the appropriate topics in The Things Stack, the Discord bot can receive the data transmitted by the IoT devices.
 
-The necessary code is implemnted in the `index.js`. The integration was achieved by following these steps:
+The necessary code is implemnted in the `mqttHandler.js`. The integration was achieved by following these steps:
 
-1. Configure MQTT settings by providing the required credentials, such as the MQTT address, application user, device ID, and password.
-2. Connect to The Things Network using the `mqtt.connect()` function and providing the necessary credentials.
-3. Subscribe to the appropriate topic using the `mqttClient.subscribe()` function. In this case, it subscribes to the uplink messages from the end device.
-4. Set up event listeners for various MQTT events such as 'connect', 'subscribe', 'error', and 'message'.
-5. Upon receiving a message, decode the payload and parse the relevant data.
-6. Create a Discord embed using the parsed data and send it to the specified channels.
+1. Import the `createMqttClient` function from the `mqttHandler.js` file in the `index.js`.
+2. Configure MQTT settings by providing the required credentials, such as the MQTT address, application user, device ID, and password in the `config.json` file.
+3. Create an MQTT client by calling the `createMqttClient()` function in the `index.js` file and providing the necessary credentials and a callback function to handle received messages.
+   - The `createMqttClient()` function sets up the MQTT client by connecting to The Things Network and subscribing to the specified topic.
+   - It sets up event listeners for various MQTT events such as 'connect', 'subscribe', 'error', and 'message'.
+   - The 'connect' event is triggered when the MQTT client is connected to The Things Network.
+   - The 'subscribe' event is triggered when the MQTT client successfully subscribes to the specified topic.
+   - The 'error' event is triggered when an error occurs in the MQTT client.
+   - The 'message' event is triggered when a message is received from the specified topic, which then calls the provided callback function.
+4. In the callback function defined in the `index.js` file:
+   - Decode the payload and parse the relevant data from the received message.
+   - Create a Discord embed using the parsed data by calling the `createWeatherEmbed()` function.
+   - Send the Discord embed to the specified channels by iterating through the channel IDs stored in the `dataStorage` module.
+   - If an error occurs while sending the embed to a channel, remove the channel ID from the `dataStorage` module.
 
 By understanding the process, developers can build upon this knowledge for future projects involving IoT devices. The integration serves as a template for various applications, such as connecting IoT devices to different platforms, transforming and processing the data, and creating custom alerts or notifications. This example showcases how MQTT can be used as a powerful tool to bridge the gap between IoT devices and other applications, fostering more innovative and integrated solutions for the Internet of Things.
 
@@ -98,6 +106,9 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
 1. Invite the bot to your Discord server using the appropriate URL (replace your_discord_bot_client_id with the actual client ID):
 
 https://discord.com/api/oauth2/authorize?client_id=your_discord_bot_client_id&permissions=8&scope=bot
+
+Example FHDW-Weather-Bot:
+https://discord.com/api/oauth2/authorize?client_id=1088555644333867069&permissions=8&scope=bot
 
 2. Deploy slash commands to your Discord server:
 
