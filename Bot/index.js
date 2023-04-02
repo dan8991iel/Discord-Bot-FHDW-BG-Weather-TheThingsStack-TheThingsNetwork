@@ -1,13 +1,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const Discord = require('discord.js');
 const dataStorage = require('./data/dataStorage');
+
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const mqtt = require('mqtt');
-const { token, ttnAppUser, ttnAppPw, ttnAdress, ttnAppDevice } = require('./config.json');
 const createWeatherEmbed = require('./embeds/weatherEmbed');
 
-const client = new Client({
+const createMqttClient = require('./mqttHandler');
+const { token, ttnAppUser, ttnAppPw, ttnAdress, ttnAppDevice } = require('./config.json');
+const ttnSubTopic = 'up';
+
+
+const discordClient = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
@@ -16,7 +19,7 @@ const client = new Client({
   ],
 });
 
-client.commands = new Collection();
+discordClient.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -25,7 +28,7 @@ for (const file of commandFiles) {
   const command = require(filePath);
 
   if ('data' in command && 'execute' in command) {
-    client.commands.set(command.data.name, command);
+    discordClient.commands.set(command.data.name, command);
   } else {
     console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
   }
@@ -38,43 +41,17 @@ for (const file of eventFiles) {
   const filePath = path.join(eventsPath, file);
   const event = require(filePath);
   if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args));
+    discordClient.once(event.name, (...args) => event.execute(...args));
   } else {
-    client.on(event.name, (...args) => event.execute(...args));
+    discordClient.on(event.name, (...args) => event.execute(...args));
   }
 }
 
-const mqttAppUser = ttnAppUser;
-const mqttAppDevice = ttnAppDevice;
-const mqttAppPw = ttnAppPw;
-const mqttAdress = ttnAdress;
+discordClient.login(token);
 
-const mqttClient = mqtt.connect(mqttAdress, {
-  username: ttnAppUser,
-  password: ttnAppPw,
-});
 
-mqttClient.on('connect', () => {
-  console.log('Connected to The Things Network via MQTT');
 
-  mqttClient.subscribe(`v3/${ttnAppUser}@ttn/devices/${mqttAppDevice}/up`, { qos: 2 }, (err, granted) => {
-    if (err) {
-      console.error('Failed to subscribe:', err);
-    } else {
-      console.log(`Successfully subscribed to topic: ${granted[0].topic}`);
-    }
-  });
-});
-
-mqttClient.on('subscribe', (topic, granted) => {
-  console.log(`Successfully subscribed to topic: ${topic}`);
-});
-
-mqttClient.on('error', error => {
-  console.error('MQTT error:', error);
-});
-
-mqttClient.on('message', (topic, message, packet) => {
+const mqttClient = createMqttClient(ttnAppUser, ttnAppPw, ttnAdress, ttnAppDevice, ttnSubTopic, (topic, message, packet) =>{
   encodedData = JSON.parse(message)['uplink_message']['frm_payload'];
   decodedData = JSON.parse(atob(encodedData));
 
@@ -84,11 +61,9 @@ mqttClient.on('message', (topic, message, packet) => {
 
   channelIds.forEach(channelId => {
     try {
-      client.channels.cache.get(channelId).send({ embeds: [weatherEmbed] });
+        discordClient.channels.cache.get(channelId).send({ embeds: [weatherEmbed] });
     } catch (error) {
-      dataStorage.removeData(channelId);
+        dataStorage.removeData(channelId);
     }
   });
 });
-
-client.login(token);
