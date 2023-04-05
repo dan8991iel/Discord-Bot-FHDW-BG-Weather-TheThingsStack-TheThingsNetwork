@@ -32,7 +32,7 @@ function formatKey(key) {
         break;
       case 'windgust':
       case 'windspeed':
-        unit = 'm/s';
+        unit = 'km/h';
         break;
       case 'windrun':
         unit = 'km';
