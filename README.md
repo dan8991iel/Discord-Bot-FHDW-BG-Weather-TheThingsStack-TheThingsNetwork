@@ -77,7 +77,7 @@ git clone https://github.com/yourusername/FHDW-Weatherstation-Discord-Bot.git
 {
   "token": "your_discord_bot_token",
   "clientId": "your_discord_bot_client_id",
-  "guildId": "your_discord_server_guild_id",
+  ("guildId": "your_discord_server_guild_id"),
   
   "ttnAppUser": "your_ttn_app_user",
   "ttnAppPw": "your_ttn_app_pw",
