@@ -1,4 +1,4 @@
-# TheThingsNetwork-DiscordBot-FHDW-WeatherData
+# Discord-Bot-FHDW-BG-Weather-TheThingsStack-TheThingsNetwork
 
 This Discord bot provides weather data from the FHDW Weatherstation. The bot can subscribe and unsubscribe channels to receive weather updates, list the currently subscribed channels, and unsubscribe all channels at once.
 
@@ -17,9 +17,9 @@ The necessary code is implemnted in the `mqttHandler.js`. The integration was ac
 1. Import the `createMqttClient` function from the `mqttHandler.js` file in the `index.js`.
 2. Configure MQTT settings by providing the required credentials, such as the MQTT address, application user, device ID, and password in the `config.json` file.
 3. Create an MQTT client by calling the `createMqttClient()` function in the `index.js` file and providing the necessary credentials and a callback function to handle received messages.
-   - The `createMqttClient()` function sets up the MQTT client by connecting to The Things Network and subscribing to the specified topic.
+   - The `createMqttClient()` function sets up the MQTT client by connecting to The Things Stack and subscribing to the specified topic.
    - It sets up event listeners for various MQTT events such as 'connect', 'subscribe', 'error', and 'message'.
-   - The 'connect' event is triggered when the MQTT client is connected to The Things Network.
+   - The 'connect' event is triggered when the MQTT client is connected to The Things Stack.
    - The 'subscribe' event is triggered when the MQTT client successfully subscribes to the specified topic.
    - The 'error' event is triggered when an error occurs in the MQTT client.
    - The 'message' event is triggered when a message is received from the specified topic, which then calls the provided callback function.
